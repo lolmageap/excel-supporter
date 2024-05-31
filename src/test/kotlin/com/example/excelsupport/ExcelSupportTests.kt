@@ -17,29 +17,14 @@ class ExcelSupportTests(
     @Test
     @DisplayName("엑셀 파일 생성")
     fun createFile() {
-        val person = Person("John", 30, 180)
-        val person2 = Person("Jane", 25, 170)
-        val person3 = Person("Tom", 27, 175)
-        val people = listOf(person, person2, person3)
-
-        val file = excelManager.createFile(people)
+        val file = excelManager.createFile(Person::class)
         file.delete()
     }
 
     @Test
     @DisplayName("매개 변수가 data class 가 아닌 경우 예외 발생")
     fun failTest() {
-        val dog1 = Dog("회운", 27)
-        val dog2 = Dog("원희", 24)
-        val dogs = listOf(dog1, dog2)
-        assertThrows<IllegalArgumentException> { excelManager.createFile(dogs) }
-    }
-
-    @Test
-    @DisplayName("매개 변수가 비어 있는 경우 예외 발생")
-    fun emptyTest() {
-        val emptyList = emptyList<Person>()
-        assertThrows<IllegalArgumentException> { excelManager.createFile(emptyList) }
+        assertThrows<IllegalArgumentException> { excelManager.createFile(Dog::class) }
     }
 
     @Test
@@ -50,7 +35,7 @@ class ExcelSupportTests(
         val person3 = Person("Tom", 27, 175)
         val people = listOf(person, person2, person3)
 
-        val file = excelManager.createFile(people)
+        val file = excelManager.createFile(Person::class)
         excelManager.writeBody(file, people)
         file.delete()
     }
@@ -76,17 +61,26 @@ class ExcelSupportTests(
         val person3 = Person("Tom", 27, 175)
         val people = listOf(person, person2, person3)
 
-        val file = excelManager.createFile(people)
+        val file = excelManager.createFile(Person::class)
         excelManager.downloadFile(file, httpServletResponse)
     }
 
     @Test
     @DisplayName("엑셀 파일을 생성 후 대용량의 데이터를 추가하고 다운로드")
     fun createAndDownloadFile() {
-        val people = (1..10000).map { Person("John", 30, 180) }
+        val people = (1..1_000_000).map { Person("John", 30, 180) }
 
-        val file = excelManager.createFile(people)
-        excelManager.writeBody(file, people)
+        val pageable = Pageable(1, 100_000, "name", "asc")
+        val chunked = pageable.size.chunked(2000)
+        val file = excelManager.createFile(Person::class)
+
+        repeat(chunked.size) {
+            val start = it * 2000
+            val end = if (it == chunked.size - 1) pageable.size else (it + 1) * 2000
+            val subList = people.subList(start, end)
+            excelManager.writeBody(file, subList)
+        }
+
         excelManager.downloadFile(file, httpServletResponse)
     }
 }

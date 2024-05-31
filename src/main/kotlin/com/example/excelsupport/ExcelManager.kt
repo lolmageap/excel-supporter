@@ -9,6 +9,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.URLEncoder
 import java.util.*
+import kotlin.reflect.KClass
 import kotlin.reflect.full.memberProperties
 
 private typealias DataClass = Any
@@ -16,10 +17,10 @@ private typealias DataClass = Any
 @Component
 class ExcelManager {
     fun createFile(
-        dataClasses: List<DataClass>,
+        dataClass: KClass<out DataClass>,
     ): File {
-        validate(dataClasses)
-        val header = writeHeader(dataClasses)
+        validate(dataClass)
+        val header = writeHeader(dataClass)
         val filename = UUID.randomUUID().toString()
         return makeFile(header, filename)
     }
@@ -95,17 +96,16 @@ class ExcelManager {
     }
 
     private fun writeHeader(
-        dataClasses: List<DataClass>,
-    ) = dataClasses.first().javaClass.kotlin.memberProperties.map {
+        dataClass: KClass<out DataClass>,
+    ) = dataClass.memberProperties.map {
         it.annotations.filterIsInstance<ExcelHeader>().firstOrNull()?.name
             ?: it.name
     }
 
     private fun validate(
-        dataClass: List<DataClass>,
+        dataClass: KClass<out DataClass>,
     ) {
-        val isDataClass = dataClass.first().javaClass.kotlin.isData
+        val isDataClass = dataClass.isData
         require(isDataClass) { "Only data classes are allowed" }
-        require(dataClass.isNotEmpty()) { "Data class list is empty" }
     }
 }
