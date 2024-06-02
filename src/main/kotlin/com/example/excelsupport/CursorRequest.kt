@@ -7,7 +7,10 @@ data class CursorRequest(
     val sort: String?,
     val direction: String?,
 ) {
-    // 현재 data class에 너무 많은 책임이 있습니다. 어떻게 분리를 해야할지 고민이 필요합니다.
+    /**TODO:
+     *  현재 data class에 너무 많은 책임이 있습니다. 어떻게 분리를 해야할지 고민이 필요합니다.
+     *  loop 함수와 limit 변수, isLast 변수를 분리하는 방법을 사용할지 고민입니다. ㅠㅠ;;
+     */
     fun loop(
         block: (CursorRequest) -> Unit,
     ) {
