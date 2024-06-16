@@ -9,5 +9,5 @@ data class Person(
 
     val height: Int,
 
-    val id: Int = 0,
+    val id: Long = 0,
 )

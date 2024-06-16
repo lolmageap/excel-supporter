@@ -36,7 +36,7 @@ class ExcelSupportMockTests {
     @Test
     @DisplayName("엑셀 파일을 생성 후 2000개 이상의 데이터를 추가하고 다운로드")
     fun bulkDownload() {
-        val people = (1..10_000).map { Person("John", 30, 180, it) }
+        val people = (1..10_000L).map { Person("John", 30, 180, it) }
         val cursorRequest = CursorRequest.of(2000)
 
         every { excelManager.createFile(Person::class) } returns File("test.xlsx")
@@ -45,11 +45,9 @@ class ExcelSupportMockTests {
 
         val file = excelManager.createFile(Person::class)
         CursorManager.loop(cursorRequest) { cursor ->
-            people.findAllById(cursor.key, cursor.chunk)
-                .also { findPeople ->
-                    excelManager.writeBody(file, findPeople)
-                    cursor.key = findPeople.last().id
-                }
+            val findPeople = people.findAllById(cursor.key, cursor.chunk)
+            excelManager.writeBody(file, findPeople)
+            cursor.nextKey(findPeople.last().id)
         }
         excelManager.downloadFile(file, httpServletResponse)
 
@@ -61,7 +59,7 @@ class ExcelSupportMockTests {
     @Test
     @DisplayName("엑셀 파일을 생성 후 2000개 이상의 데이터를 추가하고 다운로드 경계값 테스트")
     fun bulkDownloadV2() {
-        val people = (1..10_001).map { Person("John", 30, 180, it) }
+        val people = (1..10_001L).map { Person("John", 30, 180, it) }
         val cursorRequest = CursorRequest.of(2000)
 
         every { excelManager.createFile(Person::class) } returns File("test.xlsx")
@@ -70,11 +68,9 @@ class ExcelSupportMockTests {
 
         val file = excelManager.createFile(Person::class)
         CursorManager.loop(cursorRequest) { cursor ->
-            people.findAllById(cursor.key, cursor.chunk)
-                .also { findPeople ->
-                    excelManager.writeBody(file, findPeople)
-                    cursor.key = findPeople.last().id
-                }
+            val findPeople = people.findAllById(cursor.key, cursor.chunk)
+            excelManager.writeBody(file, findPeople)
+            cursor.nextKey(findPeople.last().id)
         }
         excelManager.downloadFile(file, httpServletResponse)
 
@@ -85,6 +81,6 @@ class ExcelSupportMockTests {
 }
 
 private fun List<Person>.findAllById(
-    id: Int,
+    id: Long,
     chunk: Int = 2000,
 ) = this.filter { it.id > id }.take(chunk)
