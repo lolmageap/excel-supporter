@@ -1,13 +1,12 @@
 package com.example.excelsupport
 
 object CursorManager {
-    tailrec fun <T> loop(
+    tailrec fun loop(
         cursorRequest: CursorRequest,
-        block: (CursorRequest) -> Collection<T>,
+        block: (CursorRequest) -> CursorRequestWrapper,
     ) {
         val response = block.invoke(cursorRequest)
-        if (response.isNotEmpty()) {
-            loop(cursorRequest, block)
-        }
+        if (response.cursorRequest.isLast) return
+        else loop(response.cursorRequest, block)
     }
 }
