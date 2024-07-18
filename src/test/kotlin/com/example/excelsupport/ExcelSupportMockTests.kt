@@ -34,17 +34,16 @@ class ExcelSupportMockTests {
     }
 
     @Test
-    @DisplayName("엑셀 파일을 생성 후 2000개 이상의 데이터를 추가하고 다운로드")
+    @DisplayName("엑셀 파일을 생성 후 default 값인 100,000개 이상의 데이터를 추가하고 다운로드")
     fun bulkDownload() {
         val people = (1..10_000L).map { Person("John", 30, 180, it) }
-        val cursorRequest = CursorRequest.of(2000)
 
         every { excelManager.createFile(Person::class) } returns File("test.xlsx")
         every { excelManager.writeBody(any(), any()) } returns Unit
         every { excelManager.downloadFile(any(), any()) } returns Unit
 
         val file = excelManager.createFile(Person::class)
-        CursorManager.loop(cursorRequest) { cursor ->
+        CursorManager.loop { cursor ->
             val findPeople = people.findAllById(cursor.key, cursor.chunk)
             excelManager.writeBody(file, findPeople)
             cursor.nextKey(findPeople.last().id)

@@ -2,11 +2,11 @@ package com.example.excelsupport
 
 object CursorManager {
     tailrec fun loop(
-        cursorRequest: CursorRequest,
+        cursorRequest: CursorRequest = CursorRequest.of(),
         block: (CursorRequest) -> CursorRequestWrapper,
     ) {
         val response = block.invoke(cursorRequest)
-        if (response.cursorRequest.isLast) return
+        if (response.isLast) return
         else loop(response.cursorRequest, block)
     }
 }
